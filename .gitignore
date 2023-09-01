@@ -1,0 +1,26 @@
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+# Dotenv file
+.env
+
+# For programs that use this file to ignore in searchs
+.git/
+
+#misc
+node_modules
+.DS_Store
+.vscode
+lcov.info
+report/
+.idea/
+.cspell
