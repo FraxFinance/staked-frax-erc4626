@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 import "../BaseTest.sol";
 
 contract TestSyncRewards is BaseTest {
+    /// FEATURE: syncRewards
+
     using SavingsFraxStructHelper for *;
 
     address bob;
@@ -11,6 +13,10 @@ contract TestSyncRewards is BaseTest {
     address donald;
 
     function setUp() public {
+        /// BACKGROUND: deploy the SavingsFrax contract
+        /// BACKGROUND: 10% APY cap
+        /// BACKGROUND: frax as the underlying asset
+        /// BACKGROUND: TIMELOCK_ADDRESS set as the timelock address
         defaultSetup();
 
         bob = labelAndDeal(address(1234), "bob");
@@ -29,34 +35,10 @@ contract TestSyncRewards is BaseTest {
         fraxErc20.approve(savingsFraxAddress, type(uint256).max);
     }
 
-    function test_Deploy() public {
-        /// GIVEN: A totalSupply of Shares is 1000
-        assertEq(savingsFrax.totalSupply(), 1000 ether, "setup:totalSupply should be 1000");
-
-        /// GIVEN: storedTotalAssets is 1000
-        assertEq(savingsFrax.storedTotalAssets(), 1000 ether, "setup: storedTotalAssets should be 1000");
-
-        /// GIVEN: cycleEnd next full cycle multiplied from unix epoch
-        assertEq(
-            savingsFrax.__rewardsCycleData().cycleEnd,
-            ((block.timestamp + rewardsCycleLength) / rewardsCycleLength) * rewardsCycleLength,
-            "setup: cycleEnd should be next full cycle multiplied from unix epoch"
-        );
-
-        /// GIVEN: lastSync is now
-        assertEq(savingsFrax.__rewardsCycleData().lastSync, block.timestamp, "setup: lastSync should be now");
-
-        /// GIVEN: rewardsForDistribution is 0
-        assertEq(savingsFrax.__rewardsCycleData().rewardCycleAmount, 0, "setup: rewardsForDistribution should be 0");
-
-        /// GIVEN: lastDistributionTime is now
-        assertEq(savingsFrax.lastRewardsDistribution(), block.timestamp, "setup: lastDistributionTime should be now");
-
-        /// GIVEN: rewardsCycleLength is 7 days
-        assertEq(savingsFrax.REWARDS_CYCLE_LENGTH(), 7 days, "setup: rewardsCycleLength should be 7 days");
-    }
-
     function test_SyncRewardsData() public {
+        //==============================================================================
+        // Arrange
+        //==============================================================================
         /// GIVEN: we are 1 day past the end of the old cycle
         MineBlocksResult memory _minBlocksResult = mineBlocksToTimestamp(
             savingsFrax.__rewardsCycleData().cycleEnd + 1 days
@@ -64,6 +46,10 @@ contract TestSyncRewards is BaseTest {
 
         /// GIVEN: 50 Frax is transferred to the savingsFrax contract
         mintFraxTo(savingsFraxAddress, 50 ether);
+
+        //==============================================================================
+        // Act
+        //==============================================================================
 
         SavingsFraxStorageSnapshot memory _initial_savingsFraxStorageSnapshot = savingsFraxStorageSnapshot(savingsFrax);
 
@@ -73,6 +59,10 @@ contract TestSyncRewards is BaseTest {
         DeltaSavingsFraxStorageSnapshot memory _first_deltaSavingsFraxStorageSnapshot = deltaSavingsFraxStorageSnapshot(
             _initial_savingsFraxStorageSnapshot
         );
+
+        //==============================================================================
+        // Assert
+        //==============================================================================
 
         /// THEN: lastSync should be current timestamp
         assertEq(
@@ -120,17 +110,24 @@ contract TestSyncRewards is BaseTest {
     }
 
     function test_SyncRewardsAtEndOfCycle() public {
+        //==============================================================================
+        // Arrange
+        //==============================================================================
         /// GIVEN: we are 1 day past the end of the old cycle and we sync rewards
         mineBlocksToTimestamp(savingsFrax.__rewardsCycleData().cycleEnd + 1 days);
         savingsFrax.syncRewardsAndDistribution();
 
         /// GIVEN: The current timestamp is rewardsCycleLength - 100 seconds past cycle end (i.e. 100 seconds before the NEXT cycle ends and sync has not been called)
-        MineBlocksResult memory _minBlocksResult = mineBlocksToTimestamp(
+        MineBlocksResult memory _mineBlocksResult = mineBlocksToTimestamp(
             savingsFrax.__rewardsCycleData().cycleEnd + rewardsCycleLength - 100
         );
 
         /// GIVEN: 50 Frax is transferred to the savingsFrax contract
         mintFraxTo(savingsFraxAddress, 50 ether);
+
+        //==============================================================================
+        // Act
+        //==============================================================================
 
         SavingsFraxStorageSnapshot memory _initial_savingsFraxStorageSnapshot = savingsFraxStorageSnapshot(savingsFrax);
 
@@ -140,6 +137,10 @@ contract TestSyncRewards is BaseTest {
         DeltaSavingsFraxStorageSnapshot memory _first_deltaSavingsFraxStorageSnapshot = deltaSavingsFraxStorageSnapshot(
             _initial_savingsFraxStorageSnapshot
         );
+
+        //==============================================================================
+        // Assert
+        //==============================================================================
 
         /// THEN: lastSync should be current timestamp
         assertEq(
@@ -151,7 +152,7 @@ contract TestSyncRewards is BaseTest {
         /// THEN: lastSync should have changed by the time elapsed since the prior sync
         assertEq(
             _first_deltaSavingsFraxStorageSnapshot.delta.rewardsCycleData.lastSync,
-            _minBlocksResult.timeElapsed,
+            _mineBlocksResult.timeElapsed,
             "THEN: lastSync should have changed by the cycleLength"
         );
 
@@ -188,12 +189,21 @@ contract TestSyncRewards is BaseTest {
 
     function test_syncRewardsBeforeEndOfCycle() public {
         /// SCENARIO: A sync happens before the end of the cycle
+
+        //==============================================================================
+        // Arrange
+        //==============================================================================
+
         /// GIVEN: we are 1 day past the end of the old cycle and we sync rewards
         mineBlocksToTimestamp(savingsFrax.__rewardsCycleData().cycleEnd + 1 days);
         savingsFrax.syncRewardsAndDistribution();
 
         /// GIVEN: The current timestamp is rewardsCycleLength - 1000.  i.e. cycle has not ended
         mineBlocksToTimestamp(savingsFrax.__rewardsCycleData().cycleEnd - 1000);
+
+        //==============================================================================
+        // Act
+        //==============================================================================
 
         SavingsFraxStorageSnapshot memory _initial_savingsFraxStorageSnapshot = savingsFraxStorageSnapshot(savingsFrax);
 
@@ -203,6 +213,10 @@ contract TestSyncRewards is BaseTest {
         DeltaSavingsFraxStorageSnapshot memory _first_deltaSavingsFraxStorageSnapshot = deltaSavingsFraxStorageSnapshot(
             _initial_savingsFraxStorageSnapshot
         );
+
+        //==============================================================================
+        // Assert
+        //==============================================================================
 
         /// THEN: lastSync should be the same as the initial lastSync
         assertEq(

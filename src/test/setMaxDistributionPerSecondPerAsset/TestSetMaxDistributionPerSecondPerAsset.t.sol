@@ -11,7 +11,13 @@ abstract contract SavingsFraxFunctions is BaseTest {
 }
 
 contract TestSetMaxDistributionPerSecondPerAsset is BaseTest, SavingsFraxFunctions {
+    /// FEATURE: setMaxDistributionPerSecondPerAsset
+
     function setUp() public {
+        /// BACKGROUND: deploy the SavingsFrax contract
+        /// BACKGROUND: 10% APY cap
+        /// BACKGROUND: frax as the underlying asset
+        /// BACKGROUND: TIMELOCK_ADDRESS set as the timelock address
         defaultSetup();
     }
 

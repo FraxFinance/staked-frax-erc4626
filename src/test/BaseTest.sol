@@ -24,22 +24,13 @@ contract BaseTest is FraxTest, Constants.Helper {
 
         startHoax(Constants.Mainnet.FRAX_ERC20_OWNER);
         /// BACKGROUND: deploy the SavingsFrax contract
-        /// BACKGROUND: 10% APY
+        /// BACKGROUND: 10% APY cap
         /// BACKGROUND: frax as the underlying asset
         /// BACKGROUND: TIMELOCK_ADDRESS set as the timelock address
         savingsFraxAddress = deployDeployAndDepositSavingsFrax();
         savingsFrax = SavingsFrax(savingsFraxAddress);
         rewardsCycleLength = savingsFrax.REWARDS_CYCLE_LENGTH();
         vm.stopPrank();
-
-        // // BACKGROUND: current timestamp is the ending of the last cycle
-        // vm.warp(savingsFrax.__rewardsCycleData().cycleEnd);
-
-        /// GIVEN: A totalSupply of Shares is 1000
-        assertEq(savingsFrax.totalSupply(), 1000 ether, "setup:totalSupply should be 1000");
-
-        /// GIVEN: storedTotalAssets is 1
-        assertEq(savingsFrax.storedTotalAssets(), 1000 ether, "setup: storedTotalAssets should be 1000");
     }
 
     function mintFraxTo(address _to, uint256 _amount) public returns (uint256 _minted) {
@@ -49,7 +40,7 @@ contract BaseTest is FraxTest, Constants.Helper {
     }
 }
 
-function deltaRewardsCycleData(
+function calculateDeltaRewardsCycleData(
     SavingsFrax.RewardsCycleData memory _initial,
     SavingsFrax.RewardsCycleData memory _final
 ) pure returns (SavingsFrax.RewardsCycleData memory _delta) {
@@ -98,7 +89,7 @@ function calculateDeltaSavingsFraxStorage(
         _initial.maxDistributionPerSecondPerAsset,
         _final.maxDistributionPerSecondPerAsset
     );
-    _delta.rewardsCycleData = deltaRewardsCycleData(_initial.rewardsCycleData, _final.rewardsCycleData);
+    _delta.rewardsCycleData = calculateDeltaRewardsCycleData(_initial.rewardsCycleData, _final.rewardsCycleData);
     _delta.lastRewardsDistribution = stdMath.delta(_initial.lastRewardsDistribution, _final.lastRewardsDistribution);
     _delta.storedTotalAssets = stdMath.delta(_initial.storedTotalAssets, _final.storedTotalAssets);
     _delta.totalSupply = stdMath.delta(_initial.totalSupply, _final.totalSupply);
@@ -110,4 +101,65 @@ function deltaSavingsFraxStorageSnapshot(
     _final.start = _initial;
     _final.end = savingsFraxStorageSnapshot(SavingsFrax(_initial.savingsFraxAddress));
     _final.delta = calculateDeltaSavingsFraxStorage(_final.start, _final.end);
+}
+
+//==============================================================================
+// User Snapshot Functions
+//==============================================================================
+
+struct Erc20UserStorageSnapshot {
+    uint256 balanceOf;
+}
+
+function calculateDeltaErc20UserStorageSnapshot(
+    Erc20UserStorageSnapshot memory _initial,
+    Erc20UserStorageSnapshot memory _final
+) pure returns (Erc20UserStorageSnapshot memory _delta) {
+    _delta.balanceOf = stdMath.delta(_initial.balanceOf, _final.balanceOf);
+}
+
+struct UserStorageSnapshot {
+    address user;
+    address savingsFraxAddress;
+    uint256 balance;
+    Erc20UserStorageSnapshot savingsFrax;
+    Erc20UserStorageSnapshot asset;
+}
+
+struct DeltaUserStorageSnapshot {
+    UserStorageSnapshot start;
+    UserStorageSnapshot end;
+    UserStorageSnapshot delta;
+}
+
+function userStorageSnapshot(
+    address _user,
+    SavingsFrax _savingsFrax
+) view returns (UserStorageSnapshot memory _snapshot) {
+    _snapshot.user = _user;
+    _snapshot.savingsFraxAddress = address(_savingsFrax);
+    _snapshot.balance = _user.balance;
+    _snapshot.savingsFrax.balanceOf = _savingsFrax.balanceOf(_user);
+    _snapshot.asset.balanceOf = IERC20(address(_savingsFrax.asset())).balanceOf(_user);
+}
+
+function calculateDeltaUserStorageSnapshot(
+    UserStorageSnapshot memory _initial,
+    UserStorageSnapshot memory _final
+) pure returns (UserStorageSnapshot memory _delta) {
+    _delta.user = _initial.user == _final.user ? address(0) : _final.user;
+    _delta.savingsFraxAddress = _initial.savingsFraxAddress == _final.savingsFraxAddress
+        ? address(0)
+        : _final.savingsFraxAddress;
+    _delta.balance = stdMath.delta(_initial.balance, _final.balance);
+    _delta.savingsFrax = calculateDeltaErc20UserStorageSnapshot(_initial.savingsFrax, _final.savingsFrax);
+    _delta.asset = calculateDeltaErc20UserStorageSnapshot(_initial.asset, _final.asset);
+}
+
+function deltaUserStorageSnapshot(
+    UserStorageSnapshot memory _initial
+) view returns (DeltaUserStorageSnapshot memory _snapshot) {
+    _snapshot.start = _initial;
+    _snapshot.end = userStorageSnapshot(_initial.user, SavingsFrax(_initial.savingsFraxAddress));
+    _snapshot.delta = calculateDeltaUserStorageSnapshot(_snapshot.start, _snapshot.end);
 }

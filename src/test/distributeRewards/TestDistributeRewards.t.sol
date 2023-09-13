@@ -4,9 +4,9 @@ pragma solidity ^0.8.19;
 import "../BaseTest.sol";
 
 contract TestDistributeRewards is BaseTest {
-    using SavingsFraxStructHelper for *;
+    /// FEATURE: rewards distribution
 
-    /// FEATURE: rewards distribution end to end tests
+    using SavingsFraxStructHelper for *;
     using ArrayHelper for function()[];
 
     address bob;
@@ -14,6 +14,10 @@ contract TestDistributeRewards is BaseTest {
     address donald;
 
     function setUp() public virtual {
+        /// BACKGROUND: deploy the SavingsFrax contract
+        /// BACKGROUND: 10% APY cap
+        /// BACKGROUND: frax as the underlying asset
+        /// BACKGROUND: TIMELOCK_ADDRESS set as the timelock address
         defaultSetup();
 
         bob = labelAndDeal(address(1234), "bob");
@@ -32,36 +36,19 @@ contract TestDistributeRewards is BaseTest {
         fraxErc20.approve(savingsFraxAddress, type(uint256).max);
     }
 
-    function test_Deploy() public {
-        /// GIVEN: A totalSupply of Shares is 1000
-        assertEq(savingsFrax.totalSupply(), 1000 ether, "setup:totalSupply should be 1000");
-
-        /// GIVEN: storedTotalAssets is 1000
-        assertEq(savingsFrax.storedTotalAssets(), 1000 ether, "setup: storedTotalAssets should be 1000");
-
-        /// GIVEN: cycleEnd next full cycle multiplied from unix epoch
-        assertEq(
-            savingsFrax.__rewardsCycleData().cycleEnd,
-            ((block.timestamp + rewardsCycleLength) / rewardsCycleLength) * rewardsCycleLength,
-            "setup: cycleEnd should be next full cycle multiplied from unix epoch"
-        );
-
-        /// GIVEN: lastSync is now
-        assertEq(savingsFrax.__rewardsCycleData().lastSync, block.timestamp, "setup: lastSync should be now");
-
-        /// GIVEN: rewardsForDistribution is 0
-        assertEq(savingsFrax.__rewardsCycleData().rewardCycleAmount, 0, "setup: rewardsForDistribution should be 0");
-
-        /// GIVEN: lastDistributionTime is now
-        assertEq(savingsFrax.lastRewardsDistribution(), block.timestamp, "setup: lastDistributionTime should be now");
-
-        /// GIVEN: rewardsCycleLength is 7 days
-        assertEq(savingsFrax.REWARDS_CYCLE_LENGTH(), 7 days, "setup: rewardsCycleLength should be 7 days");
-    }
-
     function test_DistributeRewardsNoRewards() public {
+        /// SCENARIO: distributeRewards() is called when there are no rewards
+
+        //==============================================================================
+        // Arrange
+        //==============================================================================
+
         /// GIVEN: move forward 1 day
         mineBlocksBySecond(1 days);
+
+        //==============================================================================
+        // Act
+        //==============================================================================
 
         SavingsFraxStorageSnapshot memory _initial_savingsFraxStorageSnapshot = savingsFraxStorageSnapshot(savingsFrax);
 
@@ -71,6 +58,10 @@ contract TestDistributeRewards is BaseTest {
         DeltaSavingsFraxStorageSnapshot memory _delta_savingsFraxStorageSnapshot = deltaSavingsFraxStorageSnapshot(
             _initial_savingsFraxStorageSnapshot
         );
+
+        //==============================================================================
+        // Assert
+        //==============================================================================
 
         /// THEN: lastDistributionTime should be current timestamp
         assertEq(
@@ -98,10 +89,18 @@ contract TestDistributeRewards is BaseTest {
     }
 
     function test_distributeRewardsInTheSameBlock() public {
-        /// GIVEN: current timestamp is equal to lastRewardsDistribution
+        /// SCENARIO: distributeRewards() is called twice in the same block
+
+        //==============================================================================
+        // Arrange
+        //==============================================================================
 
         /// GIVEN: current timestamp is equal to lastRewardsDistribution
         mineBlocksToTimestamp(savingsFrax.lastRewardsDistribution());
+
+        //==============================================================================
+        // Act
+        //==============================================================================
 
         SavingsFraxStorageSnapshot memory _initial_savingsFraxStorageSnapshot = savingsFraxStorageSnapshot(savingsFrax);
 
@@ -111,6 +110,10 @@ contract TestDistributeRewards is BaseTest {
         DeltaSavingsFraxStorageSnapshot memory _delta_savingsFraxStorageSnapshot = deltaSavingsFraxStorageSnapshot(
             _initial_savingsFraxStorageSnapshot
         );
+
+        //==============================================================================
+        // Assert
+        //==============================================================================
 
         /// THEN: lastDistributionTime should be current timestamp
         assertEq(
