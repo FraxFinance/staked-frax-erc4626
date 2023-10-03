@@ -24,7 +24,7 @@ contract LinearRewardsErc4626 is ERC4626 {
     /// @notice The precision of all integer calculations
     uint256 public constant PRECISION = 1e18;
 
-    /// @notice The cycle length in seconds
+    /// @notice The rewards cycle length in seconds
     uint256 public immutable REWARDS_CYCLE_LENGTH;
 
     /// @notice Information about the current rewards cycle
@@ -55,15 +55,17 @@ contract LinearRewardsErc4626 is ERC4626 {
     ) ERC4626(_underlying, _name, _symbol) {
         REWARDS_CYCLE_LENGTH = _rewardsCycleLength;
 
-        // seed initial rewardsCycleEnd
+        // initialize rewardsCycleEnd value
         // NOTE: normally distribution of rewards should be done prior to _syncRewards but in this case we know there are no users or rewards yet.
         _syncRewards();
+
+        // initialize lastRewardsDistribution value
         distributeRewards();
     }
 
-    /// @notice The ```calculateRewardsToDistribute``` function calculates the amount of rewards to distribute based on the rewards cycle data and the time passed
+    /// @notice The ```calculateRewardsToDistribute``` function calculates the amount of rewards to distribute based on the rewards cycle data and the time elapsed
     /// @param _rewardsCycleData The rewards cycle data
-    /// @param _deltaTime The time passed since the last rewards distribution
+    /// @param _deltaTime The time elapsed since the last rewards distribution
     /// @return _rewardToDistribute The amount of rewards to distribute
     function calculateRewardsToDistribute(
         RewardsCycleData memory _rewardsCycleData,
@@ -82,13 +84,16 @@ contract LinearRewardsErc4626 is ERC4626 {
         uint256 _lastRewardsDistribution = lastRewardsDistribution;
         uint40 _timestamp = block.timestamp.safeCastTo40();
 
-        // Calculate the delta time, but only include up to the cycle end
+        // Calculate the delta time, but only include up to the cycle end in case we are passed it
         uint256 _deltaTime = _timestamp > _rewardsCycleData.cycleEnd
             ? _rewardsCycleData.cycleEnd - _lastRewardsDistribution
             : _timestamp - _lastRewardsDistribution;
 
         // Calculate the rewards to distribute
-        _rewardToDistribute = calculateRewardsToDistribute(_rewardsCycleData, _deltaTime);
+        _rewardToDistribute = calculateRewardsToDistribute({
+            _rewardsCycleData: _rewardsCycleData,
+            _deltaTime: _deltaTime
+        });
     }
 
     /// @notice The ```distributeRewards``` function distributes the rewards once per block
@@ -103,7 +108,7 @@ contract LinearRewardsErc4626 is ERC4626 {
 
         lastRewardsDistribution = block.timestamp;
 
-        emit DistributeRewards(_rewardToDistribute);
+        emit DistributeRewards({ rewardsToDistribute: _rewardToDistribute });
     }
 
     /// @notice The ```previewSyncRewards``` function returns the updated rewards cycle data without updating the state
@@ -141,7 +146,12 @@ contract LinearRewardsErc4626 is ERC4626 {
         RewardsCycleData memory _rewardsCycleData = previewSyncRewards();
 
         if (
-            block.timestamp.safeCastTo40() == _rewardsCycleData.lastSync &&
+            block
+                .timestamp
+                // If true, then preview shows a rewards should be processed
+                .safeCastTo40() ==
+            _rewardsCycleData.lastSync &&
+            // Ensures that we don't write to state twice in the same block
             rewardsCycleData.lastSync != _rewardsCycleData.lastSync
         ) {
             rewardsCycleData = _rewardsCycleData;
@@ -179,7 +189,7 @@ contract LinearRewardsErc4626 is ERC4626 {
     function deposit(uint256 _assets, address _receiver) public override returns (uint256 _shares) {
         distributeRewards();
         _syncRewards();
-        _shares = super.deposit(_assets, _receiver);
+        _shares = super.deposit({ assets: _assets, receiver: _receiver });
     }
 
     /// @notice The ```mint``` function allows a user to mint a given number of shares
@@ -189,7 +199,7 @@ contract LinearRewardsErc4626 is ERC4626 {
     function mint(uint256 _shares, address _receiver) public override returns (uint256 _assets) {
         distributeRewards();
         _syncRewards();
-        _assets = super.mint(_shares, _receiver);
+        _assets = super.mint({ shares: _shares, receiver: _receiver });
     }
 
     function beforeWithdraw(uint256 amount, uint256 shares) internal virtual override {
@@ -204,7 +214,7 @@ contract LinearRewardsErc4626 is ERC4626 {
     function withdraw(uint256 _assets, address _receiver, address _owner) public override returns (uint256 _shares) {
         distributeRewards();
         _syncRewards();
-        _shares = super.withdraw(_assets, _receiver, _owner);
+        _shares = super.withdraw({ assets: _assets, receiver: _receiver, owner: _owner });
     }
 
     /// @notice The ```redeem``` function allows a user to redeem their shares for underlying
@@ -215,7 +225,7 @@ contract LinearRewardsErc4626 is ERC4626 {
     function redeem(uint256 _shares, address _receiver, address _owner) public override returns (uint256 _assets) {
         distributeRewards();
         _syncRewards();
-        _assets = super.redeem(_shares, _receiver, _owner);
+        _assets = super.redeem({ shares: _shares, receiver: _receiver, owner: _owner });
     }
 
     /// @notice The ```depositWithSignature``` function allows a user to use signed approvals to deposit
@@ -236,9 +246,17 @@ contract LinearRewardsErc4626 is ERC4626 {
         bytes32 _r,
         bytes32 _s
     ) external returns (uint256 _shares) {
-        uint256 amount = _approveMax ? type(uint256).max : _assets;
-        asset.permit(msg.sender, address(this), amount, _deadline, _v, _r, _s);
-        _shares = (deposit(_assets, _receiver));
+        uint256 _amount = _approveMax ? type(uint256).max : _assets;
+        asset.permit({
+            owner: msg.sender,
+            spender: address(this),
+            value: _amount,
+            deadline: _deadline,
+            v: _v,
+            r: _r,
+            s: _s
+        });
+        _shares = (deposit({ _assets: _assets, _receiver: _receiver }));
     }
 
     //==============================================================================

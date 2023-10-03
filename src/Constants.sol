@@ -8,6 +8,7 @@ import { TestBase } from "forge-std/Test.sol";
 library Mainnet {
     address internal constant TIMELOCK_ADDRESS = 0x8412ebf45bAC1B340BbE8F318b928C466c4E39CA;
     address internal constant FRAX_ERC20_OWNER = 0xB1748C79709f4Ba2Dd82834B8c82D4a505003f27;
+    address internal constant SFRAX_FXB_GOVERNANCE_ADDRESS = 0x831822660572bd54ebaa065C2acef662a6277D40;
     address internal constant FRAXSWAP_ROUTER_ADDRESS = 0xC14d550632db8592D1243Edc8B95b0Ad06703867;
     address internal constant UNIV2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address internal constant FRAX_ERC20 = 0x853d955aCEf822Db058eb8505911ED77F175b99e;
@@ -102,6 +103,7 @@ abstract contract Helper is TestBase {
     function labelConstants() public {
         vm.label(0x8412ebf45bAC1B340BbE8F318b928C466c4E39CA, "Constants.TIMELOCK_ADDRESS");
         vm.label(0xB1748C79709f4Ba2Dd82834B8c82D4a505003f27, "Constants.FRAX_ERC20_OWNER");
+        vm.label(0x831822660572bd54ebaa065C2acef662a6277D40, "Constants.SFRAX_FXB_GOVERNANCE_ADDRESS");
         vm.label(0xC14d550632db8592D1243Edc8B95b0Ad06703867, "Constants.FRAXSWAP_ROUTER_ADDRESS");
         vm.label(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, "Constants.UNIV2_ROUTER");
         vm.label(0x853d955aCEf822Db058eb8505911ED77F175b99e, "Constants.FRAX_ERC20");

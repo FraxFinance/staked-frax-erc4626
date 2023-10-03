@@ -10,4 +10,4 @@ import { ArrayHelper } from "frax-std/ArrayHelper.sol";
 import { BytesHelper } from "frax-std/BytesHelper.sol";
 import { console } from "frax-std/FraxTest.sol";
 
-import { SavingsFraxStructHelper } from "./helpers/SavingsFraxStructHelper.sol";
+import { StakedFraxStructHelper } from "./helpers/StakedFraxStructHelper.sol";

@@ -6,7 +6,7 @@ import "../BaseTest.sol";
 contract TestDistributeRewards is BaseTest {
     /// FEATURE: rewards distribution
 
-    using SavingsFraxStructHelper for *;
+    using StakedFraxStructHelper for *;
     using ArrayHelper for function()[];
 
     address bob;
@@ -14,7 +14,7 @@ contract TestDistributeRewards is BaseTest {
     address donald;
 
     function setUp() public virtual {
-        /// BACKGROUND: deploy the SavingsFrax contract
+        /// BACKGROUND: deploy the StakedFrax contract
         /// BACKGROUND: 10% APY cap
         /// BACKGROUND: frax as the underlying asset
         /// BACKGROUND: TIMELOCK_ADDRESS set as the timelock address
@@ -23,17 +23,17 @@ contract TestDistributeRewards is BaseTest {
         bob = labelAndDeal(address(1234), "bob");
         mintFraxTo(bob, 1000 ether);
         hoax(bob);
-        fraxErc20.approve(savingsFraxAddress, type(uint256).max);
+        fraxErc20.approve(stakedFraxAddress, type(uint256).max);
 
         alice = labelAndDeal(address(2345), "alice");
         mintFraxTo(alice, 1000 ether);
         hoax(alice);
-        fraxErc20.approve(savingsFraxAddress, type(uint256).max);
+        fraxErc20.approve(stakedFraxAddress, type(uint256).max);
 
         donald = labelAndDeal(address(3456), "donald");
         mintFraxTo(donald, 1000 ether);
         hoax(donald);
-        fraxErc20.approve(savingsFraxAddress, type(uint256).max);
+        fraxErc20.approve(stakedFraxAddress, type(uint256).max);
     }
 
     function test_DistributeRewardsNoRewards() public {
@@ -50,13 +50,13 @@ contract TestDistributeRewards is BaseTest {
         // Act
         //==============================================================================
 
-        SavingsFraxStorageSnapshot memory _initial_savingsFraxStorageSnapshot = savingsFraxStorageSnapshot(savingsFrax);
+        StakedFraxStorageSnapshot memory _initial_stakedFraxStorageSnapshot = stakedFraxStorageSnapshot(stakedFrax);
 
         /// WHEN: anyone calls distributeRewards()
-        savingsFrax.distributeRewards();
+        stakedFrax.distributeRewards();
 
-        DeltaSavingsFraxStorageSnapshot memory _delta_savingsFraxStorageSnapshot = deltaSavingsFraxStorageSnapshot(
-            _initial_savingsFraxStorageSnapshot
+        DeltaStakedFraxStorageSnapshot memory _delta_stakedFraxStorageSnapshot = deltaStakedFraxStorageSnapshot(
+            _initial_stakedFraxStorageSnapshot
         );
 
         //==============================================================================
@@ -65,24 +65,24 @@ contract TestDistributeRewards is BaseTest {
 
         /// THEN: lastDistributionTime should be current timestamp
         assertEq(
-            _delta_savingsFraxStorageSnapshot.end.lastRewardsDistribution,
+            _delta_stakedFraxStorageSnapshot.end.lastRewardsDistribution,
             block.timestamp,
             "THEN: lastDistributionTime should be current timestamp"
         );
 
         /// THEN: lastDistributionTime should have changed by 1 day
         assertEq(
-            _delta_savingsFraxStorageSnapshot.delta.lastRewardsDistribution,
+            _delta_stakedFraxStorageSnapshot.delta.lastRewardsDistribution,
             1 days,
             "THEN: lastDistributionTime should have changed by 1 day"
         );
 
         /// THEN: totalSupply should not have changed
-        assertEq(_delta_savingsFraxStorageSnapshot.delta.totalSupply, 0, "THEN: totalSupply should not have changed");
+        assertEq(_delta_stakedFraxStorageSnapshot.delta.totalSupply, 0, "THEN: totalSupply should not have changed");
 
         /// THEN: storedTotalAssets should not have changed
         assertEq(
-            _delta_savingsFraxStorageSnapshot.delta.storedTotalAssets,
+            _delta_stakedFraxStorageSnapshot.delta.storedTotalAssets,
             0,
             "THEN: storedTotalAssets should not have changed"
         );
@@ -96,19 +96,19 @@ contract TestDistributeRewards is BaseTest {
         //==============================================================================
 
         /// GIVEN: current timestamp is equal to lastRewardsDistribution
-        mineBlocksToTimestamp(savingsFrax.lastRewardsDistribution());
+        mineBlocksToTimestamp(stakedFrax.lastRewardsDistribution());
 
         //==============================================================================
         // Act
         //==============================================================================
 
-        SavingsFraxStorageSnapshot memory _initial_savingsFraxStorageSnapshot = savingsFraxStorageSnapshot(savingsFrax);
+        StakedFraxStorageSnapshot memory _initial_stakedFraxStorageSnapshot = stakedFraxStorageSnapshot(stakedFrax);
 
         /// WHEN: anyone calls distributeRewards()
-        savingsFrax.distributeRewards();
+        stakedFrax.distributeRewards();
 
-        DeltaSavingsFraxStorageSnapshot memory _delta_savingsFraxStorageSnapshot = deltaSavingsFraxStorageSnapshot(
-            _initial_savingsFraxStorageSnapshot
+        DeltaStakedFraxStorageSnapshot memory _delta_stakedFraxStorageSnapshot = deltaStakedFraxStorageSnapshot(
+            _initial_stakedFraxStorageSnapshot
         );
 
         //==============================================================================
@@ -117,24 +117,24 @@ contract TestDistributeRewards is BaseTest {
 
         /// THEN: lastDistributionTime should be current timestamp
         assertEq(
-            _delta_savingsFraxStorageSnapshot.end.lastRewardsDistribution,
+            _delta_stakedFraxStorageSnapshot.end.lastRewardsDistribution,
             block.timestamp,
             "THEN: lastDistributionTime should be current timestamp"
         );
 
         /// THEN: lastDistributionTime should have changed by 0
         assertEq(
-            _delta_savingsFraxStorageSnapshot.delta.lastRewardsDistribution,
+            _delta_stakedFraxStorageSnapshot.delta.lastRewardsDistribution,
             0,
             "THEN: lastDistributionTime should have changed by 0"
         );
 
         /// THEN: totalSupply should not have changed
-        assertEq(_delta_savingsFraxStorageSnapshot.delta.totalSupply, 0, "THEN: totalSupply should not have changed");
+        assertEq(_delta_stakedFraxStorageSnapshot.delta.totalSupply, 0, "THEN: totalSupply should not have changed");
 
         /// THEN: storedTotalAssets should not have changed
         assertEq(
-            _delta_savingsFraxStorageSnapshot.delta.storedTotalAssets,
+            _delta_stakedFraxStorageSnapshot.delta.storedTotalAssets,
             0,
             "THEN: storedTotalAssets should not have changed"
         );

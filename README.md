@@ -1,6 +1,6 @@
-# Savings Frax
+# Staked Frax
 
-Savings Frax is an ERC-4626 Vault
+Staked Frax is an ERC-4626 Vault
 
 Rewards are distributed linearly over a rewards cycle.
 

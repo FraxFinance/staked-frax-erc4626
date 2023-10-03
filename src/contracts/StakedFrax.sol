@@ -9,7 +9,7 @@ pragma solidity ^0.8.19;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ============================ SavingsFrax ===========================
+// ============================ StakedFrax ============================
 // ====================================================================
 // Frax Finance: https://github.com/FraxFinance
 
@@ -18,9 +18,9 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeCastLib } from "solmate/utils/SafeCastLib.sol";
 import { LinearRewardsErc4626, ERC20 } from "./LinearRewardsErc4626.sol";
 
-/// @title Savings Frax
+/// @title Staked Frax
 /// @notice A ERC4626 Vault implementation with linear rewards, rewards can be capped
-contract SavingsFrax is LinearRewardsErc4626, Timelock2Step {
+contract StakedFrax is LinearRewardsErc4626, Timelock2Step {
     using SafeCastLib for *;
 
     /// @notice The maximum amount of rewards that can be distributed per second per 1e18 asset
@@ -58,7 +58,7 @@ contract SavingsFrax is LinearRewardsErc4626, Timelock2Step {
         _requireSenderIsTimelock();
         syncRewardsAndDistribution();
 
-        // NOTES: prevents bricking the contract via overflow
+        // NOTE: prevents bricking the contract via overflow
         if (_maxDistributionPerSecondPerAsset > type(uint64).max) {
             _maxDistributionPerSecondPerAsset = type(uint64).max;
         }
@@ -79,7 +79,10 @@ contract SavingsFrax is LinearRewardsErc4626, Timelock2Step {
         RewardsCycleData memory _rewardsCycleData,
         uint256 _deltaTime
     ) public view override returns (uint256 _rewardToDistribute) {
-        _rewardToDistribute = super.calculateRewardsToDistribute(_rewardsCycleData, _deltaTime);
+        _rewardToDistribute = super.calculateRewardsToDistribute({
+            _rewardsCycleData: _rewardsCycleData,
+            _deltaTime: _deltaTime
+        });
 
         // Cap rewards
         uint256 _maxDistribution = (maxDistributionPerSecondPerAsset * _deltaTime * storedTotalAssets) / PRECISION;
