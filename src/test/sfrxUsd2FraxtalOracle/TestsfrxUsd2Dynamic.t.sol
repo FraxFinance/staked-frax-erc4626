@@ -14,18 +14,28 @@ contract TestSrxUsd2OracleDynamic is FraxTest {
     address carl = address(0xca71);
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("FRAXTAL_MAINNET_URL"));
+        vm.createSelectFork(vm.envString("FRAXTAL_RPC_URL"));
 
         /// @notice Simplified setup, requires HF
 
         // deploy mock sfrxUSD contract
         sfrxusd = new StakedFrxUSD2(frxusd, "sfrxUSD", "sfrxUSD", address(this));
         uint256[2] memory ppsInfo = [uint256(1_137_989_069_558_259_178), uint256(4_431_822_119)];
+
+        // vm.etch(0x0000B5a97bCD002981200222Eb7FA13e8024E116, address(sfrxusd).code);
+        // sfrxusd = StakedFrxUSD2(0xfc00000000000000000000000000000000000008);
+
+        bytes32 value = vm.load(address(sfrxusd), bytes32(uint256(18)));
+        bytes32 toSet = bytes32(uint256(uint160(address(this))));
+        console.logBytes32(value);
+        console.logBytes32(toSet);
+        vm.store(address(sfrxusd), bytes32(uint256(18)), toSet);
+
         sfrxusd.initialize("sfrxUSD", "sfrxUSD", address(this), ppsInfo);
+
         instance = new SfrxUsd2OracleImplementation(address(this));
         instance.setAllPricingParams(1_137_989_069_558_259_178, 4_431_822_119, block.timestamp);
 
-        // instance.initialize(address(this));
         vm.etch(0x1B680F4385f24420D264D78cab7C58365ED3F1FF, address(instance).code);
         instance = SfrxUsd2OracleImplementation(0x1B680F4385f24420D264D78cab7C58365ED3F1FF);
         instance.initialize(address(this));
