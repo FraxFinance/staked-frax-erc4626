@@ -2,6 +2,8 @@
 ## Background
 [sfrxUSD](https://docs.frax.com/protocol/assets/frxusd/sfrxusd) is our ERC-4626 yield/vault token for frxUSD, our stablecoin. Per current GENIUS Act draft stipulations, holding frxUSD itself cannot earn you yield directly, but staking it can. frxUSD itself can only be backed by cash and short-dated cash equivalents, but sfrxUSD is an entirely separate token with its own risk pool. sfrxUSD aims to earn at least the risk-free/T-Bill IORB rate, and optimally higher than this via carry-trades, algorithmic market operations (AMOs), and other DeFi activities. The current problem, however, is that the frxUSD deposited in the sfrxUSD [contract](https://etherscan.io/address/0xcf62F905562626CfcDD2261162a51fd02Fc9c5b6) is "stuck" there, as would be expected with a traditional ERC-4626. It cannot be rehypothecated or temporarily unwound (to other tokens) and invested in higher-yielding avenues. Assuming we do nothing, it can therefore earn, at best, just the risk-free/T-Bill rate.
 
+In addition to upgrading the sfrxUSD yield/vault token for frxUSD, the new price evolution function will require an upgrade to the sfrxUSD oracles on fraxtal [`0x1B680F4385f24420D264D78cab7C58365ED3F1FF`](https://fraxscan.com/address/0x1B680F4385f24420D264D78cab7C58365ED3F1FF) and [`0xF750636E1df115e3B334eD06E5b45c375107FC60`](https://fraxscan.com/address/0xf750636e1df115e3b334ed06e5b45c375107fc60). You can assume that these addresses will be proxies at the time of upgrade and that we propose to use the `SfrxUsd2OracleImplementation` contract as the implementation, for said proxies. The variables within the oracle will be set via a trusted relay/msig.
+
 ## Upgrade
 To fix the aforementioned issues, we need to upgrade the sfrxUSD contract. Key points are:
 - In the initialization, burn all the frxUSD currently in the contract
@@ -19,7 +21,13 @@ For FraxtalERC4626MintRedeemer, it needs to be double checked that it will work 
 ## Audit Scope
 **New sfrxUSD Implementation**  
 src/contracts/StakedFrxUSD2.sol  
-src/contracts/LinearRewardsQuasiErc4626.sol  
+src/contracts/LinearRewardsQuasiErc4626.sol 
+
+**SfrxUSD Fraxtal Oracle Implementation**
+src/contracts/SfrxUsd2OracleImplementation.sol
+
+**SfrxUSD Fraxtal Oracle Tests**
+src/test/sfrxUsd2FraxtalOracle/TestsfrxUsd2Dynamic.t.sol
 
 **sfrxUSD Tests**  
 src/test/StakedFrxUSD2/BaseTestStakedFrxUSD2.sol
