@@ -16,7 +16,7 @@ contract ForkTestDeploy is BaseTestStakedFrxUSD {
         DeployAndDepositStakedFrxUSD(0x2F9ddCe443db5Aa262dA566f250ae14e49f6d725);
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("MAINNET_URL"), 21_564_929);
+        vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 21_564_929);
         vm.startPrank(Constants.Mainnet.FRAX_ERC20_OWNER);
         FrxUSD(FRXUSD).addMinter(Constants.Mainnet.FRAX_ERC20_OWNER);
         FrxUSD(FRXUSD).minter_mint(Constants.Mainnet.FRAX_ERC20_OWNER, 1_000_000e18);

@@ -16,6 +16,9 @@ docs/
 # For programs that use this file to ignore in searchs
 .git/
 
+#code coverage
+coverage/
+
 #misc
 node_modules
 .DS_Store

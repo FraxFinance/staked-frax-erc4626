@@ -21,7 +21,7 @@ contract BaseTestStakedFrxUSD is FraxTest, Constants.Helper {
     IERC20 public fraxErc20 = IERC20(0xCAcd6fd266aF91b8AeD52aCCc382b4e165586E29);
 
     function defaultSetup() public {
-        vm.createSelectFork(vm.envString("MAINNET_URL"), 21_543_360);
+        vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 21_543_360);
         deal(address(fraxErc20), Constants.Mainnet.FRAX_ERC20_OWNER, 1_000_000e18);
 
         startHoax(Constants.Mainnet.FRAX_ERC20_OWNER);

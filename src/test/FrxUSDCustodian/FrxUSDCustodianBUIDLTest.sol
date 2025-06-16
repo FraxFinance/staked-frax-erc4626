@@ -14,7 +14,7 @@ contract FrxUSDCustodianBUIDLTest is FraxTest, Constants.Helper {
     FrxUSDCustodian frxUSDCustodian;
 
     function defaultSetup(IERC20 _custodianTkn) public {
-        vm.createSelectFork(vm.envString("MAINNET_URL"), 21_573_479);
+        vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 21_573_479);
         FrxUSDCustodianFactory frxUSDCustodianFactory = new FrxUSDCustodianFactory(
             Constants.Mainnet.FRAX_ERC20_OWNER,
             address(frxUSD)
@@ -36,7 +36,7 @@ contract FrxUSDCustodianBUIDLTest is FraxTest, Constants.Helper {
     }
 
     function test_BUIDL_whitelist() public {
-        vm.createSelectFork(vm.envString("MAINNET_URL"), 21_573_479);
+        vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 21_573_479);
         address whale = 0xEd71aa0dA4fdBA512FfA398fcFf9db8C49A5Cf72;
         whitelist(address(this));
         vm.startPrank(whale);

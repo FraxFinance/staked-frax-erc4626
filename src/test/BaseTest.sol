@@ -20,7 +20,7 @@ contract BaseTest is FraxTest, Constants.Helper {
     IERC20 public fraxErc20 = IERC20(Constants.Mainnet.FRAX_ERC20);
 
     function defaultSetup() public {
-        vm.createSelectFork(vm.envString("MAINNET_URL"), 18_095_664);
+        vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 18_095_664);
 
         startHoax(Constants.Mainnet.FRAX_ERC20_OWNER);
         /// BACKGROUND: deploy the StakedFrax contract

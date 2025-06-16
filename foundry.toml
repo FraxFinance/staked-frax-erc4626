@@ -28,7 +28,7 @@ bytecode_hash = "none"
 # Whether to append the metadata hash to the bytecode
 cbor_metadata = false
 # evm version (needed until all chains support PUSH0)
-evm_version = "london"
+evm_version = "cancun"
 # Contracts to track with --gas-report
 #gas_reports = [] 
 ignored_error_codes = [ 1878, 2018, 2519, 2462, 5574, 5667, 2072, 2018, 3420, 5740 ]

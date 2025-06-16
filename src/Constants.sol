@@ -190,3 +190,16 @@ abstract contract Helper is TestBase {
         vm.label(0x794F6B13FBd7EB7ef10d1ED205c9a416910207Ff, "Constants.WETH_FRAX_PAIR_ADDRESS");
     }
 }
+
+// Need to confirm these
+library FraxtalStandardProxies {
+    address internal constant FRAX_PROXY = 0xFc00000000000000000000000000000000000001;
+    address internal constant FXS_PROXY = 0xFc00000000000000000000000000000000000002;
+    address internal constant FPIS_PROXY = 0xfc00000000000000000000000000000000000004;
+    address internal constant FPIS_LOCKER_PROXY = 0xdBA1C5b97ea0d80FAC19e0712b73b02346df23CD;
+    address internal constant SFRXETH_PROXY = 0xFC00000000000000000000000000000000000005;
+    address internal constant WFRXETH_PROXY = 0xFC00000000000000000000000000000000000006;
+    address internal constant SFRAX_PROXY = 0xfc00000000000000000000000000000000000008;
+    address internal constant VEFXS_PROXY = 0x007FD070a7E1B0fA1364044a373Ac1339bAD89CF;
+    address internal constant LFPIS_PROXY = 0x8773DE100B4932e420896fe06A4DB1cCf2A616dF;
+}

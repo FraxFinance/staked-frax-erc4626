@@ -14,7 +14,7 @@ contract FrxUSDMigratorTest is FraxTest {
     FrxUSDMigrator migrator;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("MAINNET_URL"), 21_686_820);
+        vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 21_686_820);
         migrator = new FrxUSDMigrator();
         vm.startPrank(Constants.Mainnet.FRAX_ERC20_OWNER);
         FrxUSD(address(migrator.frxUSD())).addMinter(address(migrator.frxUSDCustodian()));
