@@ -177,6 +177,8 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
     /// @notice Set pricePerShare increase rate, per second (pricePerShareIncPerSecond). Also sets lastSync to now and pricePerShareStored to the current pricePerShare
     /// @param _newPricePerShareIncPerSecond New stored price per share increase per second, in E18 asset tokens
     function setPricePerShareIncPerSecond(uint256 _newPricePerShareIncPerSecond) external onlyAllowed {
+        pricePerShareStored = _previewPricePerShare(block.timestamp);
+        lastSync = block.timestamp;
         pricePerShareIncPerSecond = _newPricePerShareIncPerSecond;
         emit SetPricePerShareIncPerSecond(_newPricePerShareIncPerSecond);
     }
@@ -184,6 +186,7 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
     /// @notice Set pricePerShareStored
     /// @param _newPricePerShareStored New stored price per share, in E18 asset tokens
     function setPricePerShareStored(uint256 _newPricePerShareStored) public onlyAllowed {
+        lastSync = block.timestamp;
         pricePerShareStored = _newPricePerShareStored;
         emit SetPricePerShareStored(_newPricePerShareStored);
     }
