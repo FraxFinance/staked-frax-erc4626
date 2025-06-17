@@ -82,6 +82,82 @@ contract TestSrxUsd2OracleDynamic is FraxTest {
         instance.setPricePerShareStored(block.timestamp);
     }
 
+    function test_setPricePerShareIncPerSecond_works() public {
+        vm.warp(block.timestamp + 10 days);
+        uint256 priceStartSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceStartOracle = instance.pricePerShare();
+
+        console.log("priceStartSfrxUsd, priceStartOracle: ", priceStartSfrxUsd, priceStartOracle);
+        assertEq({ a: priceStartSfrxUsd, b: priceStartOracle, err: "// THEN: Price end not as expected" });
+
+        sfrxusd.setPricePerShareIncPerSecond(4_431_822_119 * 2);
+        instance.setPricePerShareIncPerSecond(4_431_822_119 * 2);
+
+        vm.warp(block.timestamp + 10 days);
+        uint256 priceEndSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceEndOracle = instance.pricePerShare();
+
+        console.log("priceEndSfrxUsd, priceEndOracle: ", priceEndSfrxUsd, priceEndOracle);
+        assertEq({ a: priceEndOracle, b: priceEndSfrxUsd, err: "// THEN: Price end not as expected" });
+    }
+
+    function test_fuzz_setPricePerShareIncPerSecond_parity(uint32 timeDelta, uint32 ratePerSecond) public {
+        vm.warp(block.timestamp + 10 days);
+        uint256 priceStartSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceStartOracle = instance.pricePerShare();
+
+        console.log("priceStartSfrxUsd, priceStartOracle: ", priceStartSfrxUsd, priceStartOracle);
+        assertEq({ a: priceStartSfrxUsd, b: priceStartOracle, err: "// THEN: Price end not as expected" });
+
+        sfrxusd.setPricePerShareIncPerSecond(ratePerSecond);
+        instance.setPricePerShareIncPerSecond(ratePerSecond);
+
+        vm.warp(block.timestamp + timeDelta);
+        uint256 priceEndSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceEndOracle = instance.pricePerShare();
+
+        console.log("priceEndSfrxUsd, priceEndOracle: ", priceEndSfrxUsd, priceEndOracle);
+        assertEq({ a: priceEndOracle, b: priceEndSfrxUsd, err: "// THEN: Price end not as expected" });
+    }
+
+    function test_setPricePerShareStored_works() public {
+        vm.warp(block.timestamp + 10 days);
+        uint256 priceStartSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceStartOracle = instance.pricePerShare();
+
+        console.log("priceStartSfrxUsd, priceStartOracle: ", priceStartSfrxUsd, priceStartOracle);
+        assertEq({ a: priceStartSfrxUsd, b: priceStartOracle, err: "// THEN: Price end not as expected" });
+
+        sfrxusd.setPricePerShareStored(2e18);
+        instance.setPricePerShareStored(2e18);
+
+        vm.warp(block.timestamp + 10 days);
+        uint256 priceEndSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceEndOracle = instance.pricePerShare();
+
+        console.log("priceEndSfrxUsd, priceEndOracle: ", priceEndSfrxUsd, priceEndOracle);
+        assertEq({ a: priceEndOracle, b: priceEndSfrxUsd, err: "// THEN: Price end not as expected" });
+    }
+
+    function test_fuzz_setPricePerShareStored_parity(uint32 timeDelta, uint128 newPPS) public {
+        vm.warp(block.timestamp + 10 days);
+        uint256 priceStartSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceStartOracle = instance.pricePerShare();
+
+        console.log("priceStartSfrxUsd, priceStartOracle: ", priceStartSfrxUsd, priceStartOracle);
+        assertEq({ a: priceStartSfrxUsd, b: priceStartOracle, err: "// THEN: Price end not as expected" });
+
+        sfrxusd.setPricePerShareStored(newPPS);
+        instance.setPricePerShareStored(newPPS);
+
+        vm.warp(block.timestamp + timeDelta);
+        uint256 priceEndSfrxUsd = sfrxusd.pricePerShare();
+        uint256 priceEndOracle = instance.pricePerShare();
+
+        console.log("priceEndSfrxUsd, priceEndOracle: ", priceEndSfrxUsd, priceEndOracle);
+        assertEq({ a: priceEndOracle, b: priceEndSfrxUsd, err: "// THEN: Price end not as expected" });
+    }
+
     function test_previewRateWorks(uint32 value) public {
         uint256 startContract = sfrxusd.previewPricePerShare();
         uint256 startOracle = instance.previewPricePerShare();
