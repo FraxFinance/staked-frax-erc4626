@@ -30,7 +30,9 @@ We will also be following the same upgrade pattern outlined here for [`0x1B680F4
 
 
 Current Layout 
+
 ![FraxtalERC4626TransportOracle](diagrams/0x1B680F4385f24420D264D78cab7C58365ED3F1FF.svg)
 
 Proposed Layout
+
 ![sfrxUsd2OracleImplementation](diagrams/Proposed.svg)
