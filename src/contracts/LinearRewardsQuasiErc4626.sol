@@ -34,6 +34,9 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     /// @notice The rewards cycle length in seconds
     uint256 public immutable DEPRECATED__REWARDS_CYCLE_LENGTH;
 
+    /// @notice Precomputed year
+    UD60x18 public immutable ONE_YEAR_UD60X18;
+
     /// @notice Information about the current rewards cycle
     struct RewardsCycleData {
         uint40 cycleEnd; // Timestamp of the end of the current rewards cycle
@@ -89,6 +92,7 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     /// @param _symbol The symbol of the vault
     constructor(ERC20 _underlying, string memory _name, string memory _symbol) ERC4626(_underlying, _name, _symbol) {
         UNDERLYING_PRECISION = 10 ** _underlying.decimals();
+        ONE_YEAR_UD60X18 = convert(ONE_YEAR);
     }
 
     // ---------------------------------------------
@@ -96,23 +100,24 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     // ---------------------------------------------
 
     /// @notice Calculate pricePerShare increase per second needed for a given APY.
-    /// @param _apyE18 APY in 1.%%E18 (e.g. 5% APY = input 1.05e18)
+    /// @param _apyE18 APY in 1.%%E18 (e.g. 5% APY = input 1.05e18). Must be >= 1e18
     /// @return _newPPSIPS The needed pricePerShare increase, per second, in UNDERLYING_PRECISION
-    function calcPPSIPSForGivenAPY(uint256 _apyE18) public returns (uint256 _newPPSIPS) {
+    function calcPPSIPSForGivenAPY(uint256 _apyE18) public view returns (uint256 _newPPSIPS) {
+        if (_apyE18 < 1e18) revert InvalidAPY();
         // Old
         // UD60x18 _numerator = mul(ln(convert(_apyE18)), convert(1e18)) - mul(ln(convert(1e18)), convert(1e18));
         // UD60x18 _denominator = convert(ONE_YEAR);
         // _newPPSIPS = convert(div(_numerator, _denominator));
         // New
-        UD60x18 _numerator = ln(wrap(_apyE18)) - ln(wrap(1e18));
-        UD60x18 _denominator = convert(ONE_YEAR);
+        UD60x18 _numerator = ln(wrap(_apyE18));
+        UD60x18 _denominator = ONE_YEAR_UD60X18;
         _newPPSIPS = (div(_numerator, _denominator)).unwrap();
     }
 
     /// @notice Calculate the total assets as of a given time.
     /// @param _asOfTime The time at which to calculate. Must be now or in the future.
     /// @return _newTotalAssets Expected total assets at _asOfTime, in UNDERLYING_PRECISION
-    function _previewTotalAssets(uint256 _asOfTime) public view returns (uint256 _newTotalAssets) {
+    function _previewTotalAssets(uint256 _asOfTime) internal view returns (uint256 _newTotalAssets) {
         _newTotalAssets = (_previewPricePerShare(_asOfTime) * totalSupply) / 1e18;
     }
 
@@ -140,7 +145,7 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     /// @notice Calculate current pricePerShare as of the given time, accounting for any elapsed time since the last sync.
     /// @param _asOfTime The time at which to calculate. Must be now or in the future
     /// @return _newPricePerShare Expected pricePerShare at _asOfTime, in UNDERLYING_PRECISION
-    function _previewPricePerShare(uint256 _asOfTime) public view returns (uint256 _newPricePerShare) {
+    function _previewPricePerShare(uint256 _asOfTime) internal view returns (uint256 _newPricePerShare) {
         // CHECK THIS MATH!!!
         // CHECK THIS MATH!!!
         // CHECK THIS MATH!!!
@@ -158,10 +163,17 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
         // Calculate e^x and convert back to uint256
 
         // Get the UD60x18 exponent first and scale down by UNDERLYING_PRECISION
+        // OLD: UD60x18 _exponentUD60_18 = div(
+        //     convert(pricePerShareIncPerSecond * _elapsedTime),
+        //     convert(UNDERLYING_PRECISION)
+        // );
+        // Get the UD60x18 exponent first and scale down by UNDERLYING_PRECISION
+        // UD60x18 _exponentUD60_18 = convert(pricePerShareIncPerSecond * _elapsedTime);
         UD60x18 _exponentUD60_18 = div(
             convert(pricePerShareIncPerSecond * _elapsedTime),
             convert(UNDERLYING_PRECISION)
         );
+
         // console2.log("=============");
         // console2.log("pricePerShareIncPerSecond: ", pricePerShareIncPerSecond);
         // console2.log("_elapsedTime: ", _elapsedTime);
@@ -239,7 +251,7 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     /// @dev This function simulates the rewards that will be distributed at the top of the block
     /// @return _totalAssets The total assets available in the vault
     function totalAssets() public view virtual override returns (uint256 _totalAssets) {
-        (, _totalAssets) = previewPPSAndTotalAssets();
+        _totalAssets = _previewTotalAssets(block.timestamp);
     }
 
     // ---------------------------------------------
@@ -255,9 +267,6 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
         // Update the state variables
         pricePerShareStored = _pricePerShare;
         lastSync = block.timestamp;
-
-        // Update return variables
-        _pricePerShare = pricePerShareStored;
     }
 
     /// @notice DEPRECATED: The ```deposit``` function allows a user to mint shares by depositing underlying
@@ -366,6 +375,9 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     //==============================================================================
     // Errors
     //==============================================================================
+
+    /// @notice When the provided APY is invalid
+    error InvalidAPY();
 
     /// @notice When a user attempts to Mint/Redeem
     error MintRedeemsDisabled();

@@ -22,6 +22,7 @@ import {
     IERC20PermitPermissionedOptiMintable
 } from "src/contracts/interfaces/IERC20PermitPermissionedOptiMintable.sol";
 import { OwnedV2AutoMsgSender } from "src/contracts/misc/OwnedV2AutoMsgSender.sol";
+// import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable-5/utils/ReentrancyGuardUpgradeable.sol";
 import { Math } from "@openzeppelin-4/contracts/utils/math/Math.sol";
 import { ReentrancyGuard } from "@openzeppelin-4/contracts/security/ReentrancyGuard.sol";
 import { SafeERC20 } from "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -116,6 +117,7 @@ contract FraxtalERC4626MintRedeemer is OwnedV2AutoMsgSender, ReentrancyGuard {
         vaultTknPrice = _initialVaultTknPrice;
 
         // Set the mint|deposit/redeem|withdraw flow fee
+        require(_fee < 1 * (10 ** decimals), "Fee must be a fraction of underlying");
         fee = _fee;
 
         // Set initial oracle time tolerance
@@ -592,6 +594,8 @@ contract FraxtalERC4626MintRedeemer is OwnedV2AutoMsgSender, ReentrancyGuard {
         // Set the oracles
         priceFeedUnderlying = AggregatorV3Interface(_underlyingOracleAddr);
         priceFeedVault = AggregatorV3Interface(_vaultOracleAddr);
+
+        emit OraclesSet(_underlyingOracleAddr, _vaultOracleAddr);
     }
 
     /// @notice Set the fee for the contract on mint|deposit/redeem|withdraw flow
@@ -599,12 +603,16 @@ contract FraxtalERC4626MintRedeemer is OwnedV2AutoMsgSender, ReentrancyGuard {
     function setMintRedeemFee(uint256 _fee) public onlyOwner {
         require(_fee < 1 * (10 ** decimals), "Fee must be a fraction of underlying");
         fee = _fee;
+
+        emit MintRedeemFeeSet(_fee);
     }
 
     /// @notice Set the max time an oracle can be stale before reverting
     /// @param _secs Seconds of tolerance
     function setOracleTimeTolerance(uint256 _secs) public onlyOwner {
         oracleTimeTolerance = _secs;
+
+        emit OracleTimeToleranceSet(_secs);
     }
 
     /// @notice Added to support tokens
@@ -625,6 +633,19 @@ contract FraxtalERC4626MintRedeemer is OwnedV2AutoMsgSender, ReentrancyGuard {
     /// @param assets Amount of assets taken in
     /// @param shares Amount of shares given out
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+
+    /// @notice When ERC20 tokens were recovered
+    /// @param underlyingOracleAddr aaa
+    /// @param vaultOracleAddr aaaa
+    event OraclesSet(address underlyingOracleAddr, address vaultOracleAddr);
+
+    /// @notice When the max time an oracle can be stale before reverting is set
+    /// @param secs Seconds of tolerance
+    event OracleTimeToleranceSet(uint256 secs);
+
+    /// @notice When the fee is set for the contract on mint|deposit/redeem|withdraw flow
+    /// @param fee The new fee to set, (In denominations of underlying & vault token)
+    event MintRedeemFeeSet(uint256 fee);
 
     /// @notice When ERC20 tokens were recovered
     /// @param token Token address

@@ -136,6 +136,9 @@ contract BaseTestStakedFrxUSD2 is FraxTest, Constants.Helper {
         // dr = (ln(1.05e18)*1e18 - ln(1e18)*1e18) / 31536000 /// 1e18 scaling applied
         ppsInfo[1] = stakedFrxUSD2_impl.calcPPSIPSForGivenAPY(1.05e18);
 
+        // console.log("TESTTEST");
+        // console.logUint(uint256(UD60x18.unwrap(stakedFrxUSD2_impl.ONE_YEAR_UD60X18())));
+
         // Print info
         console.log("======== Initial ========");
         console.log("PPS: ", ppsInfo[0]);

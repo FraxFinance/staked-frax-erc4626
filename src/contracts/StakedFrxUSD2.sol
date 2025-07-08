@@ -75,9 +75,6 @@ contract StakedFrxUSD2 is LinearRewardsQuasiErc4626, Timelock2Step {
 
         // Set lastSync to now
         lastSync = block.timestamp;
-
-        // Sync
-        sync();
     }
 
     /* ========== MODIFIERS ========== */

@@ -221,6 +221,11 @@ contract TestSrxUsd2OracleDynamic is FraxTest {
         assertEq({ a: priceEndOracle, b: priceEndSfrxUsd, err: "// THEN: Price end not as expected" });
     }
 
+    function test_cannot_setLastSyncInFuture() public doProxyUpgrade {
+        vm.expectRevert(bytes4(keccak256("LastSyncInFuture()")));
+        instance.setAllPricingParams(1_137_989_069_558_259_178, 4_431_822_119, block.timestamp + 100);
+    }
+
     function test_setPricePerShareStored_works() public doProxyUpgrade {
         vm.warp(block.timestamp + 10 days);
         uint256 priceStartSfrxUsd = sfrxusd.pricePerShare();
@@ -313,11 +318,6 @@ contract TestSrxUsd2OracleDynamic is FraxTest {
         if (shouldRevert) vm.expectRevert();
         uint256 out = mintRedeemer.deposit(100e18, carl);
         // console.log("Amount out: ", out);
-    }
-
-    function test_cannot_setLastSyncInFuture() public {
-        vm.expectRevert(bytes4(keccak256("LastSyncInFuture()")));
-        instance.setAllPricingParams(1_137_989_069_558_259_178, 4_431_822_119, block.timestamp + 100);
     }
 }
 
