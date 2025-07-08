@@ -91,6 +91,7 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     /// @param _name The name of the vault
     /// @param _symbol The symbol of the vault
     constructor(ERC20 _underlying, string memory _name, string memory _symbol) ERC4626(_underlying, _name, _symbol) {
+        if (_underlying.decimals() != 18) revert UnderlyingAssetMustBe18Decimals();
         UNDERLYING_PRECISION = 10 ** _underlying.decimals();
         ONE_YEAR_UD60X18 = convert(ONE_YEAR);
     }
@@ -375,6 +376,9 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     //==============================================================================
     // Errors
     //==============================================================================
+
+    /// @notice If the asset is not 18 decimals
+    error UnderlyingAssetMustBe18Decimals();
 
     /// @notice When the provided APY is invalid
     error InvalidAPY();

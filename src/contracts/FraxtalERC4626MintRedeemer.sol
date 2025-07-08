@@ -18,6 +18,7 @@ pragma solidity >=0.8.0;
  */
 import { AggregatorV3Interface } from "src/contracts/interfaces/AggregatorV3Interface.sol";
 import { IERC20 } from "@openzeppelin-4/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin-4/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {
     IERC20PermitPermissionedOptiMintable
 } from "src/contracts/interfaces/IERC20PermitPermissionedOptiMintable.sol";
@@ -101,6 +102,9 @@ contract FraxtalERC4626MintRedeemer is OwnedV2AutoMsgSender, ReentrancyGuard {
         if (wasInitialized || (address(underlyingTkn) != address(0))) {
             revert InitializeFailed();
         }
+
+        // Check the vault token for 18 decimals
+        if (IERC20Metadata(_vaultTkn).decimals() != 18) revert VaultTokenMustBe18Decimals();
 
         // Set owner for OwnedV2
         owner = _owner;
@@ -710,4 +714,7 @@ contract FraxtalERC4626MintRedeemer is OwnedV2AutoMsgSender, ReentrancyGuard {
 
     /// @notice When you are attempting to pull tokens from an owner address that is not msg.sender
     error TokenOwnerShouldBeSender();
+
+    /// @notice If the vault token is not 18 decimals
+    error VaultTokenMustBe18Decimals();
 }
