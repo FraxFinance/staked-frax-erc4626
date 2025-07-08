@@ -39,18 +39,26 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
     /// @notice The ```initialize``` function set the ownable2step owner w/n a proxy context
     /// @param owner The owner of the contract
     /// @dev Only callable when not initialized
-    function initialize(address owner) external {
+    function initialize(
+        address owner,
+        uint256 _newPricePerShareStored,
+        uint256 _newPricePerShareIncPerSecond,
+        uint256 _newLastSync
+    ) external {
         if (wasInitialized) revert AlreadyInit();
         _transferOwnership(owner);
         _setAllowed(owner, true);
+        _setAllowed(msg.sender, true);
         wasInitialized = true;
+        setAllPricingParams(_newPricePerShareStored, _newPricePerShareIncPerSecond, _newLastSync);
+        _setAllowed(msg.sender, false);
     }
 
     /* ========== Core ========== */
 
     /// @dev Adheres to chainlink's AggregatorV3Interface
     /// @return _roundId The l1Block corresponding to the last time the oracle was proofed
-    /// @return _answer The price of Sfrax in frax
+    /// @return _answer The price of SfrxUSD in frxUSD
     /// @return _startedAt The current timestamp
     /// @return _updatedAt The current timestamp
     /// @return _answeredInRound The l1Block corresponding to the last time the oracle was proofed
