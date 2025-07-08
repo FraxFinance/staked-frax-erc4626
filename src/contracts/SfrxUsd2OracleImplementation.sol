@@ -158,13 +158,14 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
     /// @notice Set pricePerShareStored, pricePerShareIncPerSecond, and lastSync in one call
     /// @param _newPricePerShareStored New stored price per share, in E18 asset tokens
     /// @param _newPricePerShareIncPerSecond New stored price per share increase per second, in E18 asset tokens
-    /// @param _newLastSync New lastSync
+    /// @param _newLastSync New lastSync, must not be gt `block.timestamp`
     /// @dev p(t) = p0*e^(r(t-t0))
     function setAllPricingParams(
         uint256 _newPricePerShareStored,
         uint256 _newPricePerShareIncPerSecond,
         uint256 _newLastSync
     ) public onlyAllowed {
+        if (_newLastSync > block.timestamp) revert LastSyncInFuture();
         pricePerShareStored = _newPricePerShareStored;
         pricePerShareIncPerSecond = _newPricePerShareIncPerSecond;
         lastSync = _newLastSync;
@@ -209,4 +210,5 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
 
     error AlreadyInit();
     error CastError();
+    error LastSyncInFuture();
 }

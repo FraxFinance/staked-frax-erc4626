@@ -213,6 +213,11 @@ contract TestSrxUsd2OracleDynamic is FraxTest {
         uint256 out = mintRedeemer.deposit(100e18, carl);
         // console.log("Amount out: ", out);
     }
+
+    function test_cannot_setLastSyncInFuture() public {
+        vm.expectRevert(bytes4(keccak256("LastSyncInFuture()")));
+        instance.setAllPricingParams(1_137_989_069_558_259_178, 4_431_822_119, block.timestamp + 100);
+    }
 }
 
 interface IERC4626Vault {
