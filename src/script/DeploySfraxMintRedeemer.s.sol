@@ -92,7 +92,7 @@ contract DeploySfraxMintRedeemer is BaseScript {
         // Upgrade proxy to implementation and call initialize
         bytes memory data = abi.encodeCall(
             implementation.initialize,
-            (eventualAdmin, frax, sfrax, fraxOracle, sfraxOracle, fee, initialVaultTknPrice)
+            (eventualAdmin, frax, sfrax, fraxOracle, sfraxOracle, fee)
         );
         proxy.upgradeToAndCall({ _implementation: address(implementation), _data: data });
 

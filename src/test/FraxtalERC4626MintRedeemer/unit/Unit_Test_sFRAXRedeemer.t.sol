@@ -338,7 +338,7 @@ contract Unit_Test_sFRAXRedeemer is BaseTestMisc {
         frax.mint(address(sfraxMintRedeemer), 100_000e18);
         sfrax.mint(address(sfraxMintRedeemer), 100_000e18);
 
-        vm.warp(block.timestamp + 1 minutes);
+        vm.roll(block.number + 1);
 
         sfraxOracle.setPrice(1.06e6);
         fraxOracle.setPrice(1e6);
@@ -533,6 +533,9 @@ contract Unit_Test_sFRAXRedeemer is BaseTestMisc {
         console.log("==============_depositAndLogBob==============");
         console.log("the sfrax minted to bob: ", sFraxMinted);
         console.log("The mint price: ", sfraxMintRedeemer.getVaultTknPriceStoredE18());
+        console.log("The effective mint price: ", 10e36 / sFraxMinted);
+        console.log("The fee: ", sfraxMintRedeemer.fee());
+        console.log("Expected effective price with fee: ", (priceMinted * 1e18) / (1e18 - sfraxMintRedeemer.fee()));
         console.log("=============================================");
     }
 }

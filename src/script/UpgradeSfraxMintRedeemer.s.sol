@@ -86,8 +86,7 @@ contract UpgradeSfraxMintRedeemer is BaseScript {
             _vaultTkn: sfrax,
             _underlyingOracle: fraxOracle,
             _vaultOracle: sfraxOracle,
-            _fee: fee,
-            _initialVaultTknPrice: initialVaultTknPrice
+            _fee: fee
         });
 
         console.log("Current FraxtalERC4626MintRedeemer proxy: ", address(sFraxMintRedeemerProxy));
