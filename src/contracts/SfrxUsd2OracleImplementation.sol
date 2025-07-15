@@ -99,7 +99,7 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
     /// @notice Calculate current pricePerShare as of the given time, accounting for any elapsed time since the last sync.
     /// @param _asOfTime The time at which to calculate. Must be now or in the future
     /// @return _newPricePerShare Expected pricePerShare at _asOfTime, in UNDERLYING_PRECISION
-    function _previewPricePerShare(uint256 _asOfTime) public view returns (uint256 _newPricePerShare) {
+    function _previewPricePerShare(uint256 _asOfTime) internal view returns (uint256 _newPricePerShare) {
         // CHECK THIS MATH!!!
         // CHECK THIS MATH!!!
         // CHECK THIS MATH!!!
@@ -117,7 +117,8 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
         // Calculate e^x and convert back to uint256
 
         // Get the UD60x18 exponent first and scale down by UNDERLYING_PRECISION
-        UD60x18 _exponentUD608 = div(convert(pricePerShareIncPerSecond * _elapsedTime), convert(UNDERLYING_PRECISION));
+        // UD60x18 _exponentUD608 = div(convert(pricePerShareIncPerSecond * _elapsedTime), convert(UNDERLYING_PRECISION));
+        UD60x18 _exponentUD608 = wrap(pricePerShareIncPerSecond * _elapsedTime);
         // console2.log("=============");
         // console2.log("pricePerShareIncPerSecond: ", pricePerShareIncPerSecond);
         // console2.log("_elapsedTime: ", _elapsedTime);
