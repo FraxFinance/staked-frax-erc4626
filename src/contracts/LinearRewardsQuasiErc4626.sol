@@ -169,11 +169,11 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
         //     convert(UNDERLYING_PRECISION)
         // );
         // Get the UD60x18 exponent first and scale down by UNDERLYING_PRECISION
-        // UD60x18 _exponentUD60_18 = convert(pricePerShareIncPerSecond * _elapsedTime);
-        UD60x18 _exponentUD60_18 = div(
-            convert(pricePerShareIncPerSecond * _elapsedTime),
-            convert(UNDERLYING_PRECISION)
-        );
+        UD60x18 _exponentUD60_18 = wrap(pricePerShareIncPerSecond * _elapsedTime);
+        // UD60x18 _exponentUD60_18 = div(
+        //     convert(pricePerShareIncPerSecond * _elapsedTime),
+        //     convert(UNDERLYING_PRECISION)
+        // );
 
         // console2.log("=============");
         // console2.log("pricePerShareIncPerSecond: ", pricePerShareIncPerSecond);
