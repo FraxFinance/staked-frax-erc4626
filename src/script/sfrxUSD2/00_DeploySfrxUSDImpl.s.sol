@@ -24,7 +24,7 @@ contract DeploySfrxUSDImpl is BaseScript {
         console.log("Deploy the implementation for StakedFrxUSD2");
         // =======================================================
         sfrxUSD2Impl = new StakedFrxUSD2({
-            _underlying: IERC20(Constants.Mainnet.FRXUSD),
+            _underlying: IERC20(Constants.Mainnet.FRXUSD_ADDRESS),
             _name: "Staked Frax USD",
             _symbol: "sfrxUSD",
             _timelockAddress: Constants.Mainnet.FRAX_ERC20_OWNER

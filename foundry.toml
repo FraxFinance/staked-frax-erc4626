@@ -32,6 +32,8 @@ evm_version = "cancun"
 # Contracts to track with --gas-report
 #gas_reports = [] 
 ignored_error_codes = [ 1878, 2018, 2519, 2462, 5574, 5667, 2072, 2018, 3420, 5740 ]
+# File writes
+fs_permissions = [{ access = "read-write", path = "src/script/sfrxUSD2/batches/"}]
 
 
 [fuzz]

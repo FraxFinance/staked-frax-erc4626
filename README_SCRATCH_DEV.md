@@ -25,6 +25,9 @@ OR, if you get "stack too deep" issues
 <!-- ================================================================== -->
 <!-- 00 -->
 ```source .env && forge script src/script/sfrxUSD2/00_DeploySfrxUSDImpl.s.sol:DeploySfrxUSDImpl --chain-id 1 --with-gas-price 2000000000 --priority-gas-price 200000000 --rpc-url $MAINNET_RPC_URL --optimize --optimizer-runs 1000000 --use "0.8.30" --evm-version "prague" --broadcast --slow --verify --verifier=etherscan --retries=3 --verifier-url=$ETHERSCAN_API_URL --verifier-api-key $ETHERSCAN_API_KEY```
+<!-- 01 -->
+```source .env && forge script src/script/sfrxUSD2/01_GenSfrxUSD2UpgradeBatch.s.sol:GenSfrxUSD2UpgradeBatch --chain-id 1 --with-gas-price 2000000000 --priority-gas-price 200000000 --rpc-url $MAINNET_RPC_URL --optimize --optimizer-runs 1000000 --use "0.8.30" --evm-version "prague" --broadcast --slow --verify --verifier=etherscan --retries=3 --verifier-url=$ETHERSCAN_API_URL --verifier-api-key $ETHERSCAN_API_KEY```
+
 
 ## Verification
 ### Regular contracts
