@@ -32,7 +32,7 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     uint256 public constant ONE_YEAR = 31_536_000;
 
     /// @notice The rewards cycle length in seconds
-    uint256 public immutable DEPRECATED__REWARDS_CYCLE_LENGTH;
+    uint256 public immutable REWARDS_CYCLE_LENGTH = 604_800; // 7 days
 
     /// @notice Precomputed year
     UD60x18 public immutable ONE_YEAR_UD60X18;
@@ -371,6 +371,31 @@ abstract contract LinearRewardsQuasiErc4626 is ERC4626 {
     /// @notice DEPRECATED: Will always return 0.
     function maxRedeem(address owner) public view override returns (uint256) {
         return 0;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+    //////    Backward compatible yield view functions to match old interface
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice DEPRECATED: use pricePerShareIncPerSecond instead
+    function maxDistributionPerSecondPerAsset() external view returns (uint256) {
+        // Return the maximum distribution per second per asset
+        return pricePerShareIncPerSecond;
+    }
+
+    /// @notice DEPRECATED: use pricePerShareIncPerSecond instead
+    function rewardsCycleData() external view returns (RewardsCycleData memory) {
+        // Return the rewards cycle data as the max possible rate, rate is curbed by maxDistributionPerSecondPerAsset
+        return
+            RewardsCycleData({
+                cycleEnd: uint40(block.timestamp + REWARDS_CYCLE_LENGTH),
+                lastSync: uint40(block.timestamp),
+                rewardCycleAmount: uint216(type(uint216).max / 1e18) // max value
+            });
+    }
+
+    function lastRewardsDistribution() external view returns (uint256) {
+        return block.timestamp;
     }
 
     //==============================================================================

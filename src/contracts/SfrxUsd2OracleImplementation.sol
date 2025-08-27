@@ -24,6 +24,12 @@ import { GapFirst11 } from "src/contracts/misc/StorageGap.sol";
 contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2Step {
     /// @notice Slot bumping handled in `GapFirst11` contract
 
+    struct RewardsCycleData {
+        uint40 cycleEnd; // Timestamp of the end of the current rewards cycle
+        uint40 lastSync; // Timestamp of the last time the rewards cycle was synced
+        uint216 rewardCycleAmount; // Amount of rewards to be distributed in the current cycle
+    }
+
     /// @notice Variables needed for price evolution
     uint256 public pricePerShareStored;
     uint256 public pricePerShareIncPerSecond;
@@ -73,6 +79,12 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
         _answer = int256(previewPricePerShare());
         if (_answer < 0) revert CastError();
         if (_roundId < 0) revert CastError();
+    }
+
+    /// @dev Adheres to chainlink's AggregatorV3Interface
+    /// @return The decimals intended to be used via this oracle
+    function decimals() external pure returns (uint8) {
+        return 18;
     }
 
     /// @notice Calculate current pricePerShare as of now, accounting for any elapsed time since the last sync. Same as pricePerShare().
@@ -174,7 +186,7 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
         uint256 _newPricePerShareIncPerSecond,
         uint256 _newLastSync
     ) public onlyAllowed {
-        if (_newLastSync > block.timestamp) revert LastSyncInFuture();
+        if (_newLastSync > block.timestamp) revert LastSyncMustNotBeInTheFuture();
         pricePerShareStored = _newPricePerShareStored;
         pricePerShareIncPerSecond = _newPricePerShareIncPerSecond;
         lastSync = _newLastSync;
@@ -201,6 +213,36 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
         emit SetPricePerShareStored(_newPricePerShareStored);
     }
 
+    function rewardsCycleData() external view returns (RewardsCycleData memory) {
+        // Return the rewards cycle data as the max possible rate, rate is curbed by maxDistributionPerSecondPerAsset
+        return
+            RewardsCycleData({
+                cycleEnd: uint40(604_800 + block.timestamp),
+                lastSync: uint40(block.timestamp),
+                rewardCycleAmount: uint216(type(uint216).max / 1e18) // max value
+            });
+    }
+
+    function maxDistributionPerSecondPerAsset() external view returns (uint256) {
+        return pricePerShareIncPerSecond;
+    }
+
+    function storedTotalAssets() external view returns (uint256) {
+        return previewPricePerShare();
+    }
+
+    function totalAssets() external view returns (uint256) {
+        return previewPricePerShare();
+    }
+
+    function totalSupply() external pure returns (uint256) {
+        return 1e18;
+    }
+
+    function lastRewardsDistribution() external view returns (uint256) {
+        return block.timestamp;
+    }
+
     /* ========== Events ========== */
 
     /// @notice When setPricePerShareStored is called
@@ -215,9 +257,14 @@ contract SfrxUsd2OracleImplementation is GapFirst11, OracleAllowlist, Ownable2St
     /// @param newLastSync New lastSync
     event SetLastSync(uint256 newLastSync);
 
-    /* ========== Events ========== */
+    /* ========== Errors ========== */
 
+    /// @notice If the contract was already initialized
     error AlreadyInit();
+
+    /// @notice If latestRoundData casting is problematic
     error CastError();
-    error LastSyncInFuture();
+
+    /// @notice If the supplied lastSync time is in the future
+    error LastSyncMustNotBeInTheFuture();
 }
